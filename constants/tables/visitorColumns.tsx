@@ -4,8 +4,6 @@ import { ColumnDef } from "@tanstack/react-table";
 import StatusBadge from "@/components/reusables/StatusBadge";
 import { Visitor } from "@/hooks/useVisitorData";
 
-const getInitial = (name: string) => name?.charAt(0).toUpperCase() || "";
-
 export const VisitorColumns: ColumnDef<Visitor>[] = [
   {
     accessorKey: "name",
@@ -13,7 +11,7 @@ export const VisitorColumns: ColumnDef<Visitor>[] = [
     cell: ({ row }) => (
       <div className="flex items-center gap-3 py-1">
         <div className="w-8 h-8 rounded-full bg-[#E5E7EB] flex items-center justify-center text-[11px] font-bold text-[#374151] shrink-0">
-          {getInitial(row.original.name)}
+          {(row.original.name || "U").charAt(0).toUpperCase()}
         </div>
         <span className="font-bold text-[#111827] text-sm">
           {row.original.name}
@@ -21,37 +19,35 @@ export const VisitorColumns: ColumnDef<Visitor>[] = [
       </div>
     ),
   },
-  {
-    accessorKey: "entryTime",
-    header: "Entry Time",
-    cell: ({ row }) => (
-      <span className="text-[#374151] font-medium text-sm">
-        {row.original.entryTime}
-      </span>
-    ),
-  },
+  { accessorKey: "entryTime", header: "Entry Time" },
   {
     accessorKey: "whoToSee",
     header: "Who to see",
     cell: ({ row }) => (
       <div className="flex items-center gap-2">
-        <div className="w-6 h-6 rounded-full bg-[#1D2E5A] flex items-center justify-center text-[10px] font-semibold text-white shrink-0">
-          {getInitial(row.original.whoToSee)}
+        {/* Avatar background matches your header/primary blue */}
+        <div className="w-6 h-6 rounded-full bg-[#1D2E5A] text-white flex items-center justify-center text-[10px] font-bold shrink-0">
+          {(row.original.whoToSee || "H").charAt(0).toUpperCase()}
         </div>
-        <span className="text-[#374151] text-sm font-medium">
+        {/* Changed from faint gray to bold dark text for readability */}
+        <span className="text-[#111827] text-sm font-semibold">
           {row.original.whoToSee}
         </span>
       </div>
     ),
   },
   {
-    accessorKey: "purpose",
+    accessorKey: "purpose", // RESTORED PURPOSE
     header: "Purpose",
     cell: ({ row }) => (
-      <span className="text-[#6B7280] text-sm truncate max-w-[200px] block">
+      <span className="text-sm text-gray-500 italic">
         {row.original.purpose}
       </span>
     ),
+  },
+  {
+    accessorKey: "exitTime", // RESTORED EXIT TIME
+    header: "Exit Time",
   },
   {
     accessorKey: "status",

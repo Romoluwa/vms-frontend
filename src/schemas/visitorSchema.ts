@@ -28,13 +28,10 @@ export const signOutSchema = yup
 
 export type SignOutFormValues = yup.InferType<typeof signOutSchema>;
 
+// Keep your original for registration if needed
 export const AdminLoginSchema = yup
   .object({
     Email: yup.string().email("Invalid email").required("Email is required"),
     Password: yup.string().required("Please enter your password"),
-    confirmPassword: yup
-      .string()
-      .oneOf([yup.ref("Password")], "Passwords must match")
-      .required("Please confirm your password"),
   })
   .required();

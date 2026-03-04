@@ -9,8 +9,8 @@ type StatusBadgeProps = {
 
 // 1. Map backend values to the exact Figma labels
 const STATUS_LABELS: Record<string, string> = {
-  signed_in: "Still around",
-  signed_out: "Left",
+  signed_in: "Signed In",
+  signed_out: "Signed Out",
   onhold: "On Hold",
 };
 
@@ -22,17 +22,17 @@ const STATUS_STYLES: Record<
     dot: string;
   }
 > = {
-  // 2. "Still around" Orange Styles
+  // 2. "Signed In" Blue styles
   signed_in: {
-    bg: "bg-[#FFFBEB]", // Light orange background
-    text: "text-[#D97706]", // Dark orange text
-    dot: "bg-[#F59E0B]", // Bright orange dot
+    bg: "bg-[#EFF6FF]",
+    text: "text-[#1D4ED8]",
+    dot: "bg-[#2563EB]",
   },
-  // 3. "Left" Green Styles
+  // 3. "Signed Out" Green styles
   signed_out: {
-    bg: "bg-[#F0FDF4]", // Light green background
-    text: "text-[#166534]", // Dark green text
-    dot: "bg-[#10B981]", // Bright green dot
+    bg: "bg-[#F0FDF4]",
+    text: "text-[#166534]",
+    dot: "bg-[#10B981]",
   },
 
   // Keep your existing styles below for other parts of the app
@@ -69,8 +69,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ value }) => {
         "flex items-center gap-[6px] rounded-full w-fit py-[2px] px-[10px] text-[11px] font-medium border",
         style.bg,
         style.text,
-        // Optional: add a very subtle border for extra polish as seen in Figma
-        key === "signed_in" ? "border-[#FEF3C7]" : "border-[#DCFCE7]",
+        key === "signed_in" ? "border-[#DBEAFE]" : "border-[#DCFCE7]",
       )}
       aria-label={`Status: ${displayLabel}`}
     >

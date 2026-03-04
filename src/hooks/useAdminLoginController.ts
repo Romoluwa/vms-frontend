@@ -4,14 +4,14 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useRouter } from "next/navigation";
-import { AdminLoginSchema } from "@/schemas/visitorSchema"; //
-
+import VisitService from "@/services/apidefinitions/visitService";
+import { AdminLoginSchema } from "@/schemas/visitorSchema";
 
 export const useAdminLoginController = () => {
+  const ADMIN_TOKEN_KEY = "adminAccessToken";
   const router = useRouter();
-
-  
   const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null); // <-- added error state
 
   const {
     register,
@@ -22,21 +22,33 @@ export const useAdminLoginController = () => {
     mode: "onTouched",
   });
 
-  
-  const togglePasswordVisibility = () => {
-    setShowPassword((prev) => !prev);
-  };
+  const togglePasswordVisibility = () => setShowPassword((prev) => !prev);
 
-  
   const onLogin = handleSubmit(async (data) => {
+    setLoginError(null); // clear previous error
     try {
-      // Logic for authentication would go here
-      console.log("Admin Data:", data);
+      const response = await VisitService.AdminSignIn({
+        email: data.Email,
+        password: data.Password,
+      });
 
-     
-      router.push("/admin/dashboard");
-    } catch (error) {
-      console.error("Login failed:", error);
+      const token =
+        response?.data?.accessToken ??
+        response?.data?.token ??
+        response?.accessToken ??
+        response?.token;
+
+      if (token) {
+        localStorage.setItem(ADMIN_TOKEN_KEY, token);
+      }
+
+      router.push("/dashboard");
+    } catch (error: any) {
+      // Show backend error message if available
+      const message =
+        error.response?.data?.message || error.message || "Login failed";
+      console.error("Admin login failed:", message);
+      setLoginError(message); // set state so component can display
     }
   });
 
@@ -45,7 +57,8 @@ export const useAdminLoginController = () => {
     errors,
     isSubmitting,
     onLogin,
-    showPassword, 
-    togglePasswordVisibility, 
+    showPassword,
+    togglePasswordVisibility,
+    loginError, // <-- expose error to component
   };
 };

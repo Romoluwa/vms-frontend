@@ -37,7 +37,7 @@ function SuccessSignOutContent() {
         />
 
         <p className="text-white text-xl md:text-lg font-medium">
-          Welcome to Bluechip Technologies
+          Goodbye from Bluechip Technologies
         </p>
 
         <div className="w-full max-w-[90%] md:max-w-[500px] min-h-[110px] md:min-h-[90px] flex items-center justify-center rounded-[16px] border border-white/30 bg-white/10 backdrop-blur-md shadow-2xl px-10">

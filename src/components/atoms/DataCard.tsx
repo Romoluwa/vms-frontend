@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import Skeleton from "../reusables/Skeleton";
 import MetricIcon from "../icons/metricIcon";
+import { LogIn } from "lucide-react";
 
 export default function DataCard({
   title,
@@ -16,21 +17,30 @@ export default function DataCard({
   return (
     <div
       className={cn(
-        "w-full shadow-sm bg-[#FAFBFE] rounded-xl min-h-[100px] p-3 flex flex-col justify-between text-[#3E484D]",
+        "w-full bg-white border border-[#F2F2F2] rounded-[12px] flex flex-col overflow-hidden shadow-sm h-[130px]",
         className,
       )}
     >
-      <div className="flex items-center justify-between w-full">
-        <h3 className="font-medium text-xs md:text-sm lg:text-normal text-dark-grey">
+      {/* TOP PART: Faint Grey Background [#F2F2F2] */}
+      <div className="flex items-center gap-2 px-4 py-3 bg-[#F2F2F2] border-b border-[#E5E7EB]">
+        <div className="scale-75 origin-left text-[#3E484D]">
+          <LogIn />
+        </div>
+        <h3 className="text-[#A1ACB2] font-medium text-[13px] whitespace-nowrap">
           {title}
         </h3>
-        <MetricIcon />
       </div>
-      {loading ? (
-        <Skeleton width={"50"} height={"50px"} />
-      ) : (
-        <p className="text-xl font-orbitron font-semibold">{value}</p>
-      )}
+
+      {/* BOTTOM PART: White Background with Centered Value */}
+      <div className="flex-1 flex items-center justify-center bg-white">
+        {loading ? (
+          <Skeleton width="30px" height="24px" />
+        ) : (
+          <p className="text-[20px] font-bold text-[#2E3133] font-orbitron">
+            {value}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

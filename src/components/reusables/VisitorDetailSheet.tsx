@@ -89,7 +89,7 @@ export function VisitorDetailSheet({ visitor, isOpen, onOpenChange }: any) {
             </div>
           </div>
 
-          {/* Exit Time with "Still Around" Badge */}
+          {/* Exit status */}
           <div className="flex items-start gap-4">
             <div className="p-2.5 rounded-xl bg-green-50 shrink-0 text-green-500">
               <Clock size={18} />
@@ -100,11 +100,8 @@ export function VisitorDetailSheet({ visitor, isOpen, onOpenChange }: any) {
               </p>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-sm font-semibold text-slate-700">
-                  {visitor.exitTime || "Still Around"}
+                  {visitor.exitTime || "-"}
                 </span>
-                {!visitor.exitTime && (
-                  <div className="h-2 w-2 rounded-full bg-orange-500 animate-pulse" />
-                )}
               </div>
             </div>
           </div>
@@ -113,7 +110,7 @@ export function VisitorDetailSheet({ visitor, isOpen, onOpenChange }: any) {
           <DetailRow
             icon={<LogOut size={18} className="text-cyan-400" />}
             label="Sign Out Signature"
-            value="—"
+            value="-"
             bgColor="bg-cyan-50"
           />
         </div>
@@ -137,3 +134,4 @@ function DetailRow({ icon, label, value, bgColor }: any) {
     </div>
   );
 }
+
