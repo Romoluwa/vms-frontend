@@ -52,7 +52,7 @@ export const useAdminLoginController = () => {
         localStorage.setItem("admin_user", JSON.stringify(userData));
       }
 
-      router.push("/dashboard");
+      router.push("/admin/dashboard");
     } catch (error: any) {
       const message =
         error.response?.data?.message || error.message || "Login failed";

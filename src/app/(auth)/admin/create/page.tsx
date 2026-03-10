@@ -35,7 +35,7 @@ export default function AdminRegisterPage() {
     setServerError("");
     try {
       await VisitService.registerAdmin(data);
-      router.push("/admin/login?registered=true");
+      router.push("/admin?registered=true");
     } catch (error: any) {
       setServerError(error.message || "An error occurred during registration");
     }
@@ -58,7 +58,7 @@ export default function AdminRegisterPage() {
       <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-8 lg:p-20 bg-white relative">
         {/* Mobile Back Navigation */}
         <Link
-          href="/admin/login"
+          href="/admin"
           className="absolute top-8 left-8 md:hidden text-slate-500"
         >
           <ArrowLeft size={24} />
@@ -192,7 +192,7 @@ export default function AdminRegisterPage() {
               <p className="text-sm text-slate-500">
                 Already have an account?{" "}
                 <Link
-                  href="/admin/login"
+                  href="/admin"
                   className="font-bold text-[#3B5998] hover:underline transition-all"
                 >
                   Sign In

@@ -7,7 +7,7 @@ import { Search, LogOut, Loader2, Funnel } from "lucide-react";
 import DataCard from "@/components/atoms/DataCard";
 import DefaultTable from "@/components/reusables/DefaultTable";
 import { useVisitorData, Visitor } from "@/hooks/useVisitorData";
-import { VisitorColumns } from "../../../constants/tables/visitorColumns";
+import { VisitorColumns } from "../../../../../constants/tables/visitorColumns";
 import { VisitorDetailSheet } from "@/components/reusables/VisitorDetailSheet";
 import WelcomeCard from "@/components/atoms/welcomeCard";
 
@@ -33,12 +33,7 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const filterRef = useRef<HTMLDivElement>(null);
 
-  const {
-    visitors,
-    metrics,
-    loading,
-    filterVisitors,
-  } = useVisitorData();
+  const { visitors, metrics, loading, filterVisitors } = useVisitorData();
 
   const toggleStatus = (status: string) => {
     setStatusFilter((prev) =>
@@ -77,7 +72,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const token = localStorage.getItem(ADMIN_TOKEN_KEY);
     if (!token) {
-      router.push("/admin/login");
+      router.push("/admin");
       return;
     }
     setLoadingPage(false);
@@ -127,7 +122,7 @@ export default function DashboardPage() {
     setIsLoggingOut(true);
     localStorage.removeItem(ADMIN_TOKEN_KEY);
     localStorage.removeItem("admin_user");
-    router.push("/admin/login");
+    router.push("/admin");
     setIsLoggingOut(false);
   };
 

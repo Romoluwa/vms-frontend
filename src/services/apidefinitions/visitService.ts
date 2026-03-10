@@ -4,6 +4,7 @@ import { AdminCreateAccountValues } from "@/schemas/visitorSchema";
 import axios from "axios";
 
 const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
+
 const ADMIN_TOKEN_KEY = "adminAccessToken";
 const REFRESH_TOKEN_KEY = "adminRefreshToken";
 
@@ -20,13 +21,17 @@ const API = axios.create({
 API.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token = localStorage.getItem(ADMIN_TOKEN_KEY);
-    if (token) config.headers.Authorization = `Bearer ${token}`;
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
+
   return config;
 });
 
 // ----------------------------------------------------
-// REFRESH TOKEN LOGIC (RACE CONDITION SAFE)
+// REFRESH TOKEN QUEUE
 // ----------------------------------------------------
 
 let isRefreshing = false;
@@ -34,8 +39,11 @@ let failedQueue: any[] = [];
 
 const processQueue = (error: any, token: string | null) => {
   failedQueue.forEach((prom) => {
-    if (error) prom.reject(error);
-    else prom.resolve(token);
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
   });
 
   failedQueue = [];
@@ -60,7 +68,7 @@ API.interceptors.response.use(
     if (!refreshToken) {
       localStorage.removeItem(ADMIN_TOKEN_KEY);
       localStorage.removeItem("admin_user");
-      window.location.href = "/admin/login";
+      window.location.href = "/admin";
       return Promise.reject(error);
     }
 
@@ -80,7 +88,7 @@ API.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      const response = await axios.post(`${baseURL}/api/v1/admin/refresh`, {
+      const response = await axios.post(`${baseURL}/admin/refresh`, {
         refreshToken,
       });
 
@@ -100,7 +108,7 @@ API.interceptors.response.use(
       localStorage.removeItem(REFRESH_TOKEN_KEY);
       localStorage.removeItem("admin_user");
 
-      window.location.href = "/admin/login";
+      window.location.href = "/admin";
 
       return Promise.reject(err);
     } finally {
@@ -108,6 +116,10 @@ API.interceptors.response.use(
     }
   },
 );
+
+// ----------------------------------------------------
+// VISIT SERVICE
+// ----------------------------------------------------
 
 export default class VisitService {
   static async filter(params?: {
@@ -147,6 +159,7 @@ export default class VisitService {
       const response = await API.get(
         `/visits/active?visitorName=${visitorName}`,
       );
+
       return response.data?.data ?? [];
     } catch (error) {
       console.error(error);
@@ -244,7 +257,7 @@ export default class VisitService {
 
   static async AdminSignIn(data: { email: string; password: string }) {
     try {
-      const response = await API.post(`/admin/login`, data);
+      const response = await API.post(`/admin`, data);
 
       if (response.data?.token) {
         localStorage.setItem(ADMIN_TOKEN_KEY, response.data.token);
@@ -272,7 +285,7 @@ export default class VisitService {
       const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
 
       if (refreshToken) {
-        await API.post(`/api/v1/admin/token/invalidate`, { refreshToken });
+        await API.post(`/admin/token/invalidate`, { refreshToken });
       }
 
       localStorage.removeItem(ADMIN_TOKEN_KEY);
