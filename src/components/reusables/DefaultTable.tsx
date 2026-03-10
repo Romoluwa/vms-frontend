@@ -18,7 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 // import Pagination from "./Pagination";
-import ClipboardIcon from "../icons/clipboard";
+import ClipboardIcon from "@/components/icons/clipboard";
 import Pagination from "./Pagination";
 
 type DefaultTableProps<T> = {

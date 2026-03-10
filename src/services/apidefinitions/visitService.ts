@@ -1,150 +1,300 @@
+// services/visitService.ts
+
+import { AdminCreateAccountValues } from "@/schemas/visitorSchema";
 import axios from "axios";
+
 const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
-console.log(baseURL, "This is the baseurl");
 const ADMIN_TOKEN_KEY = "adminAccessToken";
+const REFRESH_TOKEN_KEY = "adminRefreshToken";
 
 const API = axios.create({
   baseURL,
   withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: { "Content-Type": "application/json" },
 });
+
+// ----------------------------------------------------
+// REQUEST INTERCEPTOR
+// ----------------------------------------------------
 
 API.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token = localStorage.getItem(ADMIN_TOKEN_KEY);
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    if (token) config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
 
+// ----------------------------------------------------
+// REFRESH TOKEN LOGIC (RACE CONDITION SAFE)
+// ----------------------------------------------------
+
+let isRefreshing = false;
+let failedQueue: any[] = [];
+
+const processQueue = (error: any, token: string | null) => {
+  failedQueue.forEach((prom) => {
+    if (error) prom.reject(error);
+    else prom.resolve(token);
+  });
+
+  failedQueue = [];
+};
+
+// ----------------------------------------------------
+// RESPONSE INTERCEPTOR
+// ----------------------------------------------------
+
 API.interceptors.response.use(
   (response) => response,
   async (error) => {
+    const originalRequest = error.config;
     const status = error.response?.status;
-    const url = error.config?.url || "unknown-url";
-    const message = error.response?.data?.message || "Server Error";
-    const isMetrics400 = status === 400 && url?.includes("/admin/metrics");
 
-    if (isMetrics400) {
-      console.warn(`API Warning [${status}] ${url}:`, message);
-    } else {
-      console.error(`API Error [${status}] ${url}:`, message);
+    if ((status !== 401 && status !== 403) || originalRequest._retry) {
+      return Promise.reject(error);
     }
 
-    return Promise.reject(error);
+    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+
+    if (!refreshToken) {
+      localStorage.removeItem(ADMIN_TOKEN_KEY);
+      localStorage.removeItem("admin_user");
+      window.location.href = "/admin/login";
+      return Promise.reject(error);
+    }
+
+    originalRequest._retry = true;
+
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        failedQueue.push({ resolve, reject });
+      })
+        .then((token) => {
+          originalRequest.headers["Authorization"] = `Bearer ${token}`;
+          return API(originalRequest);
+        })
+        .catch((err) => Promise.reject(err));
+    }
+
+    isRefreshing = true;
+
+    try {
+      const response = await axios.post(`${baseURL}/api/v1/admin/refresh`, {
+        refreshToken,
+      });
+
+      const newAccessToken = response.data.accessToken;
+
+      localStorage.setItem(ADMIN_TOKEN_KEY, newAccessToken);
+
+      processQueue(null, newAccessToken);
+
+      originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
+
+      return API(originalRequest);
+    } catch (err) {
+      processQueue(err, null);
+
+      localStorage.removeItem(ADMIN_TOKEN_KEY);
+      localStorage.removeItem(REFRESH_TOKEN_KEY);
+      localStorage.removeItem("admin_user");
+
+      window.location.href = "/admin/login";
+
+      return Promise.reject(err);
+    } finally {
+      isRefreshing = false;
+    }
   },
 );
+
 export default class VisitService {
-  //get methods
+  static async filter(params?: {
+    search?: string;
+    status?: "SIGNED_IN" | "SIGNED_OUT";
+    from?: string;
+    to?: string;
+    pageNo?: number;
+    pageSize?: number;
+    sortBy?: string;
+    sortDir?: "asc" | "desc";
+  }) {
+    try {
+      const response = await API.get(`/admin`, { params });
+      return response.data?.data ?? [];
+    } catch (error) {
+      console.error("Failed to fetch visits:", error);
+      return [];
+    }
+  }
+
+  // ----------------------------------------------------
+  // GET METHODS
+  // ----------------------------------------------------
+
   static async fetchDepartments() {
     try {
       const response = await API.get(`/departments`);
       return response.data;
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   }
+
   static async searchActiveVisits(visitorName: string) {
     try {
       const response = await API.get(
         `/visits/active?visitorName=${visitorName}`,
       );
-
-      return response.data.data; // return only array
+      return response.data?.data ?? [];
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   }
-  static async getMetricsData() {
+
+  static async getAllVisits(params?: any) {
     try {
-      const today = new Date().toISOString().slice(0, 10);
-      const response = await API.get(`/admin/metrics`, {
-        params: { date: today },
-      });
-      return response.data?.data ?? {};
-    } catch (error: any) {
-      const details = error?.response?.data;
-      console.error("Metrics request failed:", details || error.message);
-      return {};
+      return await this.filter(params);
+    } catch (error) {
+      console.error("Failed to fetch visits:", error);
+      return [];
     }
   }
+
   static async getAllVisitors(pageNo?: number, pageSize?: number) {
     try {
-      const params: Record<string, number> = {};
-      if (typeof pageNo === "number" && pageNo > 0) params.pageNo = pageNo;
-      if (typeof pageSize === "number" && pageSize > 0)
-        params.pageSize = pageSize;
-
-      const response = await API.get(`/admin`, {
-        params: Object.keys(params).length ? params : undefined,
-      });
-      return response.data?.data ?? response.data ?? [];
+      return await this.getAllVisits({ pageNo, pageSize });
     } catch (error) {
       console.error("Failed to fetch visitors:", error);
       return [];
     }
   }
+
   static async searchByVisitorName(query: string) {
     try {
-      const response = await API.get("/admin/visits", {
-        params: { name: query },
-      });
-      return response.data;
+      return await this.getAllVisits({ search: query });
     } catch (error) {
-      // This catches "Server Error" or "Unauthorized"
       console.error("Search API failed:", error);
-      return []; // Returns empty array so the app doesn't break
+      return [];
     }
   }
+
+  static async getMetricsData() {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+
+      const response = await API.get(`/admin/metrics`, {
+        params: { date: today },
+      });
+
+      return response.data?.data ?? {};
+    } catch (error: any) {
+      console.error("Metrics request failed:", error?.response?.data);
+      return {};
+    }
+  }
+
   static async getYesterdayMetrics() {
     try {
       const response = await API.get(`/admin/metrics/yesterday`);
-      // Based on common API patterns, it likely returns a number or an object with a count
       return response.data;
     } catch (error: any) {
-      console.error("Failed to fetch yesterday's metrics:", error.message);
-      return 0; // Fallback so the Welcome Card doesn't break
+      console.error("Failed to fetch yesterday metrics:", error.message);
+      return 0;
     }
   }
-  // Post methods
+
+  static async getVisitById(visitId: string) {
+    try {
+      const response = await API.get(`/admin/${visitId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Failed to fetch visit details:", error);
+      throw error;
+    }
+  }
+
+  // ----------------------------------------------------
+  // POST METHODS
+  // ----------------------------------------------------
+
   static async signIn(data: any) {
     try {
       const response = await API.post(`/visits/sign-in`, data);
       return response.data;
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   }
+
   static async signOut(visitId: string, data: any) {
     try {
       const response = await API.post(`/visits/${visitId}/sign-out`, data);
       return response.data;
     } catch (error: any) {
-      // Extract backend message if available
       const message = error.response?.data?.message || "Sign out failed";
-      throw new Error(message); // ✅ critical
-    }
-  }
-  static async AdminSignIn(data: { email: string; password: string }) {
-    try {
-      const response = await API.post(`/admin/login`, data);
-      return response.data;
-    } catch (error: any) {
-      const message = error.response?.data?.message || "Login failed";
       throw new Error(message);
     }
   }
+
+  // ----------------------------------------------------
+  // ADMIN LOGIN
+  // ----------------------------------------------------
+
+  static async AdminSignIn(data: { email: string; password: string }) {
+    try {
+      const response = await API.post(`/admin/login`, data);
+
+      if (response.data?.token) {
+        localStorage.setItem(ADMIN_TOKEN_KEY, response.data.token);
+
+        if (response.data.refreshToken) {
+          localStorage.setItem(REFRESH_TOKEN_KEY, response.data.refreshToken);
+        }
+
+        localStorage.setItem("admin_user", JSON.stringify(response.data.admin));
+      }
+
+      return response.data;
+    } catch (error: any) {
+      const message = error.response?.data?.message || "Login failed";
+      throw new Error(message.toUpperCase());
+    }
+  }
+
+  // ----------------------------------------------------
+  // LOGOUT
+  // ----------------------------------------------------
+
   static async logout() {
     try {
+      const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+
+      if (refreshToken) {
+        await API.post(`/api/v1/admin/token/invalidate`, { refreshToken });
+      }
+
+      localStorage.removeItem(ADMIN_TOKEN_KEY);
+      localStorage.removeItem(REFRESH_TOKEN_KEY);
+      localStorage.removeItem("admin_user");
+
       const response = await API.post(`/admin/logout`);
+
       return response.data;
     } catch (error: any) {
       const message = error.response?.data?.message || "Logout failed";
       throw new Error(message);
+    }
+  }
+
+  static async registerAdmin(data: AdminCreateAccountValues) {
+    try {
+      const response = await API.post("/admin/register", data);
+      return response.data;
+    } catch (error: any) {
+      const message = error.response?.data?.message || "REGISTRATION FAILED";
+      throw new Error(message.toUpperCase());
     }
   }
 }

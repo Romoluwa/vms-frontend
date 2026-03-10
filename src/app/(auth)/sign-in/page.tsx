@@ -6,7 +6,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, UserRoundCheck, ChevronDown } from "lucide-react";
+import { ArrowLeft, UserRoundCheck, Laptop } from "lucide-react";
 
 import { signInSchema } from "@/schemas/visitorSchema";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import { PhoneInput } from "@/components/ui/phoneInput";
 import { SignaturePad } from "@/components/ui/signaturePad";
 import { useEffect, useState } from "react";
 import VisitService from "@/services/apidefinitions/visitService";
+
 export default function SignInPage() {
   const router = useRouter();
   type Department = {
@@ -23,12 +24,15 @@ export default function SignInPage() {
   };
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loadingDepts, setLoadingDepts] = useState(true);
+
+  // State changed to boolean | null to track explicit Yes/No selection
+  const [hasLaptop, setHasLaptop] = useState<boolean | null>(null);
+
   const fetchDepartments = async () => {
     setLoadingDepts(true);
     try {
       const response = await VisitService.fetchDepartments();
       setDepartments(response.data);
-      console.log(response);
     } catch (error) {
       console.log(error);
     } finally {
@@ -44,20 +48,16 @@ export default function SignInPage() {
         hostName: data.hostName,
         departmentCode: data.department,
         purpose: data.purposeOfVisit,
-        laptopModel: data.laptopModel,
-        laptopSerialNumber: data.laptopSerialNumber,
+        laptopModel: hasLaptop === true ? data.laptopModel : "",
+        laptopSerialNumber: hasLaptop === true ? data.laptopSerialNumber : "",
         signatureBase64: data.signature,
       });
 
-      console.log("Sign In Response:", response);
-
-      // Only store visitId if it exists
       const visitId = response?.data?.data?.visitId;
       if (visitId) {
         localStorage.setItem("visitId", visitId);
       }
 
-      // Redirect anyway
       router.push(`/success?name=${encodeURIComponent(data.visitorName)}`);
     } catch (error: any) {
       console.error("Sign In Error:", error.response?.data || error);
@@ -102,6 +102,7 @@ export default function SignInPage() {
   });
 
   const showLoading = isSubmitting && Object.keys(errors).length === 0;
+
   useEffect(() => {
     fetchDepartments();
   }, []);
@@ -177,7 +178,7 @@ export default function SignInPage() {
                 <select
                   {...register("department")}
                   disabled={loadingDepts}
-                  className="w-full h-[52px] bg-white border border-[#E2E8F0] rounded-lg px-4"
+                  className="w-full h-[52px] bg-white border border-[#E2E8F0] rounded-lg px-4 text-sm"
                 >
                   <option value="" disabled>
                     {loadingDepts ? "Loading..." : "Select Department"}
@@ -193,7 +194,7 @@ export default function SignInPage() {
                 </select>
               </div>
               {errors.department && (
-                <span className="text-red-500 text-[10px]">
+                <span className="text-red-500 text-[10px] font-bold uppercase">
                   {errors.department.message}
                 </span>
               )}
@@ -207,19 +208,94 @@ export default function SignInPage() {
             error={errors.purposeOfVisit}
           />
 
-          <div className="flex flex-col md:flex-row gap-5 md:gap-6">
-            <Input
-              name="laptopModel"
-              placeholder="Laptop Model"
-              register={register}
-              error={errors.laptopModel}
-            />
-            <Input
-              name="laptopSerialNumber"
-              placeholder="Laptop Serial Number"
-              register={register}
-              error={errors.laptopSerialNumber}
-            />
+          {/* LAPTOP SELECTION SECTION */}
+          <div className="flex flex-col gap-4 border-t border-gray-50 pt-4">
+            <div className="flex items-center gap-3 text-[#7E878C]">
+              <Laptop size={18} />
+              <span className="text-sm font-medium">
+                Did you come with a laptop?
+              </span>
+            </div>
+
+            <div className="flex gap-8 px-1">
+              {/* YES CHECKBOX */}
+              <button
+                type="button"
+                onClick={() => setHasLaptop(true)}
+                className="flex items-center gap-3 group cursor-pointer"
+              >
+                <div
+                  className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                    hasLaptop === true
+                      ? "bg-[#1D2E5A] border-[#1D2E5A]"
+                      : "border-gray-300 group-hover:border-[#1D2E5A]"
+                  }`}
+                >
+                  {hasLaptop === true && (
+                    <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                  )}
+                </div>
+                <span
+                  className={`text-sm ${hasLaptop === true ? "text-[#1D2E5A] font-bold" : "text-[#7E878C]"}`}
+                >
+                  Yes
+                </span>
+              </button>
+
+              {/* NO CHECKBOX */}
+              <button
+                type="button"
+                onClick={() => setHasLaptop(false)}
+                className="flex items-center gap-3 group cursor-pointer"
+              >
+                <div
+                  className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                    hasLaptop === false
+                      ? "bg-[#1D2E5A] border-[#1D2E5A]"
+                      : "border-gray-300 group-hover:border-[#1D2E5A]"
+                  }`}
+                >
+                  {hasLaptop === false && (
+                    <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                  )}
+                </div>
+                <span
+                  className={`text-sm ${hasLaptop === false ? "text-[#1D2E5A] font-bold" : "text-[#7E878C]"}`}
+                >
+                  No
+                </span>
+              </button>
+            </div>
+
+            {/* ROLL DOWN FIELDS */}
+            <div
+              className={`grid transition-all duration-300 ease-in-out ${
+                hasLaptop === true
+                  ? "grid-rows-[1fr] opacity-100"
+                  : "grid-rows-[0fr] opacity-0 overflow-hidden"
+              }`}
+            >
+              <div className="overflow-hidden">
+                <div className="flex flex-col md:flex-row gap-5 md:gap-6 pt-2 pb-2">
+                  <div className="flex-1">
+                    <Input
+                      name="laptopModel"
+                      placeholder="Laptop Model"
+                      register={register}
+                      error={errors.laptopModel}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <Input
+                      name="laptopSerialNumber"
+                      placeholder="Serial Number"
+                      register={register}
+                      error={errors.laptopSerialNumber}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -229,8 +305,12 @@ export default function SignInPage() {
             <Controller
               name="signature"
               control={control}
-              render={({ field: { onChange } }) => (
-                <SignaturePad onChange={onChange} error={errors.signature} />
+              render={({ field: { onChange }, fieldState: { error } }) => (
+                <SignaturePad
+                  onChange={onChange}
+                  // Using error from fieldState is more idiomatic in React Hook Form
+                  error={error || errors.signature}
+                />
               )}
             />
           </div>

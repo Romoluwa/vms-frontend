@@ -35,3 +35,34 @@ export const AdminLoginSchema = yup
     Password: yup.string().required("Please enter your password"),
   })
   .required();
+  
+export type AdminLoginSchema = yup.InferType<typeof AdminLoginSchema>;
+
+export const adminCreateAccountSchema = yup.object().shape({
+  firstName: yup.string().trim().required("FIRST NAME IS REQUIRED"),
+
+  lastName: yup.string().trim().required("LAST NAME IS REQUIRED"),
+
+  email: yup
+    .string()
+    .email("INVALID EMAIL ADDRESS")
+    .trim()
+    .lowercase()
+    .required("EMAIL IS REQUIRED"),
+
+  password: yup
+    .string()
+    .required("PASSWORD IS REQUIRED")
+    .min(8, "PASSWORD MUST BE AT LEAST 8 CHARACTERS")
+    .matches(/[A-Z]/, "PASSWORD MUST CONTAIN AT LEAST ONE UPPERCASE LETTER")
+    .matches(/[0-9]/, "PASSWORD MUST CONTAIN AT LEAST ONE NUMBER"),
+
+  confirmPassword: yup
+    .string()
+    .required("PLEASE CONFIRM YOUR PASSWORD")
+    .oneOf([yup.ref("password")], "PASSWORDS MUST MATCH"),
+});
+
+export type AdminCreateAccountValues = yup.InferType<
+  typeof adminCreateAccountSchema
+>;

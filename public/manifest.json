@@ -3,7 +3,10 @@
   "short_name": "Bluechip VMS",
   "description": "Visitor Management System for Bluechip Technologies",
   "start_url": "/",
-  "display": "standalone",
+  "scope": "/",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone", "window-controls-overlay"],
+  "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#1D2E5A",
   "icons": [

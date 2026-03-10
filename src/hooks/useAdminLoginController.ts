@@ -25,30 +25,39 @@ export const useAdminLoginController = () => {
   const togglePasswordVisibility = () => setShowPassword((prev) => !prev);
 
   const onLogin = handleSubmit(async (data) => {
-    setLoginError(null); // clear previous error
+    setLoginError(null);
     try {
       const response = await VisitService.AdminSignIn({
         email: data.Email,
         password: data.Password,
       });
 
+      // 1. Extract Token
       const token =
         response?.data?.accessToken ??
         response?.data?.token ??
         response?.accessToken ??
         response?.token;
 
+      // 2. Extract User Details (This is what was missing!)
+      const userData =
+        response?.data?.user || response?.user || response?.data?.admin;
+
       if (token) {
         localStorage.setItem(ADMIN_TOKEN_KEY, token);
       }
 
+      // 3. Save the user object so the Dashboard can show the real name
+      if (userData) {
+        localStorage.setItem("admin_user", JSON.stringify(userData));
+      }
+
       router.push("/dashboard");
     } catch (error: any) {
-      // Show backend error message if available
       const message =
         error.response?.data?.message || error.message || "Login failed";
       console.error("Admin login failed:", message);
-      setLoginError(message); // set state so component can display
+      setLoginError(message);
     }
   });
 

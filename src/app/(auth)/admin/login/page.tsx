@@ -5,6 +5,7 @@ import { LockKeyhole, Eye, EyeOff } from "lucide-react";
 import { useAdminLoginController } from "@/hooks/useAdminLoginController";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Link from "next/link";
 
 export default function AdminLoginPage() {
   const controller = useAdminLoginController();
@@ -45,6 +46,7 @@ export default function AdminLoginPage() {
             <Input
               name="Email"
               type="email"
+              shouldCapitalize={false}
               placeholder="Enter your email"
               register={controller.register}
               error={controller.errors.Email}
@@ -56,6 +58,7 @@ export default function AdminLoginPage() {
               <Input
                 name="Password"
                 type={controller.showPassword ? "text" : "password"}
+                shouldCapitalize={false}
                 placeholder="Password"
                 register={controller.register}
                 error={controller.errors.Password}
@@ -92,6 +95,15 @@ export default function AdminLoginPage() {
             </Button>
 
             <div className="mt-8 text-center">
+              <p className="text-sm text-slate-500">
+                Don't have an account?{" "}
+                <Link
+                  href="/admin/create"
+                  className="font-bold text-[#3B5998] hover:underline transition-all"
+                >
+                  Create one
+                </Link>
+              </p>
               <button
                 type="button"
                 className="text-sm font-medium text-blue-600 hover:underline"
