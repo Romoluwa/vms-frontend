@@ -50,7 +50,7 @@ const processQueue = (error: any, token: string | null) => {
 };
 
 // ----------------------------------------------------
-// RESPONSE INTERCEPTOR
+// RESPONSE INTERCEPTOR (FIXED)
 // ----------------------------------------------------
 
 API.interceptors.response.use(
@@ -59,7 +59,19 @@ API.interceptors.response.use(
     const originalRequest = error.config;
     const status = error.response?.status;
 
-    if ((status !== 401 && status !== 403) || originalRequest._retry) {
+    /**
+     * FIX: If the error is from the Login route itself,
+     * DO NOT try to refresh the token. Just fail immediately.
+     */
+    const isLoginRequest =
+      originalRequest.url.includes("/admin/login") &&
+      originalRequest.method === "post";
+
+    if (
+      isLoginRequest ||
+      (status !== 401 && status !== 403) ||
+      originalRequest._retry
+    ) {
       return Promise.reject(error);
     }
 
@@ -68,7 +80,7 @@ API.interceptors.response.use(
     if (!refreshToken) {
       localStorage.removeItem(ADMIN_TOKEN_KEY);
       localStorage.removeItem("admin_user");
-      window.location.href = "/admin";
+      if (typeof window !== "undefined") window.location.href = "/admin";
       return Promise.reject(error);
     }
 
@@ -93,23 +105,17 @@ API.interceptors.response.use(
       });
 
       const newAccessToken = response.data.accessToken;
-
       localStorage.setItem(ADMIN_TOKEN_KEY, newAccessToken);
-
       processQueue(null, newAccessToken);
-
       originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
 
       return API(originalRequest);
     } catch (err) {
       processQueue(err, null);
-
       localStorage.removeItem(ADMIN_TOKEN_KEY);
       localStorage.removeItem(REFRESH_TOKEN_KEY);
       localStorage.removeItem("admin_user");
-
-      window.location.href = "/admin";
-
+      if (typeof window !== "undefined") window.location.href = "/admin";
       return Promise.reject(err);
     } finally {
       isRefreshing = false;
@@ -118,10 +124,67 @@ API.interceptors.response.use(
 );
 
 // ----------------------------------------------------
-// VISIT SERVICE
+// VISIT SERVICE CLASS
 // ----------------------------------------------------
 
 export default class VisitService {
+  static async AdminSignIn(data: { email: string; password: string }) {
+    try {
+      const response = await axios.post(`${baseURL}/admin/login`, data, {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (response.data?.token) {
+        localStorage.setItem(ADMIN_TOKEN_KEY, response.data.token);
+
+        if (response.data.refreshToken) {
+          localStorage.setItem(REFRESH_TOKEN_KEY, response.data.refreshToken);
+        }
+
+        localStorage.setItem("admin_user", JSON.stringify(response.data.admin));
+      }
+
+      return response.data;
+    } catch (error: any) {
+      console.error("ADMIN_SIGNIN_ERROR:", error.response?.data);
+      const message = error.response?.data?.message || "Login failed";
+      throw new Error(message.toUpperCase());
+    }
+  }
+
+  static async logout() {
+    try {
+      const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+
+      if (refreshToken) {
+        // Use standard API instance here
+        await API.post(`/admin/token/invalidate`, { refreshToken });
+      }
+
+      localStorage.removeItem(ADMIN_TOKEN_KEY);
+      localStorage.removeItem(REFRESH_TOKEN_KEY);
+      localStorage.removeItem("admin_user");
+
+      const response = await API.post(`/admin/logout`);
+      return response.data;
+    } catch (error: any) {
+      const message = error.response?.data?.message || "Logout failed";
+      throw new Error(message);
+    }
+  }
+
+  static async registerAdmin(data: AdminCreateAccountValues) {
+    try {
+      const response = await API.post("/admin/register", data);
+      return response.data;
+    } catch (error: any) {
+      const message = error.response?.data?.message || "REGISTRATION FAILED";
+      throw new Error(message.toUpperCase());
+    }
+  }
+
+  // --- FETCH / GET METHODS ---
+
   static async filter(params?: {
     search?: string;
     status?: "SIGNED_IN" | "SIGNED_OUT";
@@ -141,16 +204,12 @@ export default class VisitService {
     }
   }
 
-  // ----------------------------------------------------
-  // GET METHODS
-  // ----------------------------------------------------
-
   static async fetchDepartments() {
     try {
       const response = await API.get(`/departments`);
       return response.data;
     } catch (error) {
-      console.error(error);
+      console.error("Department fetch error:", error);
     }
   }
 
@@ -159,10 +218,9 @@ export default class VisitService {
       const response = await API.get(
         `/visits/active?visitorName=${visitorName}`,
       );
-
       return response.data?.data ?? [];
     } catch (error) {
-      console.error(error);
+      console.error("Active visits search error:", error);
     }
   }
 
@@ -193,14 +251,24 @@ export default class VisitService {
     }
   }
 
+  static async getVisitById(visitId: string) {
+    try {
+      const response = await API.get(`/admin/${visitId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Failed to fetch visit details:", error);
+      throw error;
+    }
+  }
+
+  // --- METRICS METHODS ---
+
   static async getMetricsData() {
     try {
       const today = new Date().toISOString().slice(0, 10);
-
       const response = await API.get(`/admin/metrics`, {
         params: { date: today },
       });
-
       return response.data?.data ?? {};
     } catch (error: any) {
       console.error("Metrics request failed:", error?.response?.data);
@@ -218,26 +286,14 @@ export default class VisitService {
     }
   }
 
-  static async getVisitById(visitId: string) {
-    try {
-      const response = await API.get(`/admin/${visitId}`);
-      return response.data;
-    } catch (error) {
-      console.error("Failed to fetch visit details:", error);
-      throw error;
-    }
-  }
-
-  // ----------------------------------------------------
-  // POST METHODS
-  // ----------------------------------------------------
+  // --- VISITOR ACTION METHODS ---
 
   static async signIn(data: any) {
     try {
       const response = await API.post(`/visits/sign-in`, data);
       return response.data;
     } catch (error) {
-      console.error(error);
+      console.error("Visitor sign-in error:", error);
     }
   }
 
@@ -248,66 +304,6 @@ export default class VisitService {
     } catch (error: any) {
       const message = error.response?.data?.message || "Sign out failed";
       throw new Error(message);
-    }
-  }
-
-  // ----------------------------------------------------
-  // ADMIN LOGIN
-  // ----------------------------------------------------
-
-  static async AdminSignIn(data: { email: string; password: string }) {
-    try {
-      const response = await API.post(`/admin`, data);
-
-      if (response.data?.token) {
-        localStorage.setItem(ADMIN_TOKEN_KEY, response.data.token);
-
-        if (response.data.refreshToken) {
-          localStorage.setItem(REFRESH_TOKEN_KEY, response.data.refreshToken);
-        }
-
-        localStorage.setItem("admin_user", JSON.stringify(response.data.admin));
-      }
-
-      return response.data;
-    } catch (error: any) {
-      const message = error.response?.data?.message || "Login failed";
-      throw new Error(message.toUpperCase());
-    }
-  }
-
-  // ----------------------------------------------------
-  // LOGOUT
-  // ----------------------------------------------------
-
-  static async logout() {
-    try {
-      const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-
-      if (refreshToken) {
-        await API.post(`/admin/token/invalidate`, { refreshToken });
-      }
-
-      localStorage.removeItem(ADMIN_TOKEN_KEY);
-      localStorage.removeItem(REFRESH_TOKEN_KEY);
-      localStorage.removeItem("admin_user");
-
-      const response = await API.post(`/admin/logout`);
-
-      return response.data;
-    } catch (error: any) {
-      const message = error.response?.data?.message || "Logout failed";
-      throw new Error(message);
-    }
-  }
-
-  static async registerAdmin(data: AdminCreateAccountValues) {
-    try {
-      const response = await API.post("/admin/register", data);
-      return response.data;
-    } catch (error: any) {
-      const message = error.response?.data?.message || "REGISTRATION FAILED";
-      throw new Error(message.toUpperCase());
     }
   }
 }
