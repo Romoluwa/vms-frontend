@@ -59,10 +59,7 @@ API.interceptors.response.use(
     const originalRequest = error.config;
     const status = error.response?.status;
 
-    /**
-     * FIX: If the error is from the Login route itself,
-     * DO NOT try to refresh the token. Just fail immediately.
-     */
+
     const isLoginRequest =
       originalRequest.url.includes("/admin/login") &&
       originalRequest.method === "post";
