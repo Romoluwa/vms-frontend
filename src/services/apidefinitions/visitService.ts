@@ -59,6 +59,10 @@ API.interceptors.response.use(
     const originalRequest = error.config;
     const status = error.response?.status;
 
+    const isAdminRequest =
+      typeof originalRequest?.url === "string" &&
+      originalRequest.url.includes("/admin");
+
 
     const isLoginRequest =
       originalRequest.url.includes("/admin/login") &&
@@ -66,6 +70,7 @@ API.interceptors.response.use(
 
     if (
       isLoginRequest ||
+      !isAdminRequest ||
       (status !== 401 && status !== 403) ||
       originalRequest._retry
     ) {
