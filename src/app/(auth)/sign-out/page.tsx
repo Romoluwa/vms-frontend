@@ -97,29 +97,40 @@ export default function SignOutPage() {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center py-6 px-4 gap-6">
+    <div className="relative min-h-screen px-4 py-6">
       {/* Background Video */}
       <video
-        className="fixed inset-0 w-full h-full object-cover -z-10"
+        className="fixed inset-0 h-full w-full object-cover -z-10"
         src="/backgrounds/Form-bg.mp4"
         autoPlay
         loop
         muted
+        playsInline
+        preload="metadata"
       />
 
-      {/* Header */}
-      <header className="relative w-full flex justify-center mb-8">
-        <Link href="/">
-          <div className="absolute left-0 bg-white rounded-full px-4 py-2 flex gap-2">
-            <ArrowLeft /> Back
+      <div className="relative z-10 flex w-full flex-col items-center gap-6">
+        {/* Header */}
+        <header className="w-full max-w-[654px]">
+          <div className="flex items-center w-full">
+            <Link href="/">
+              <div className="bg-white rounded-full px-4 py-2 flex gap-2">
+                <ArrowLeft /> Back
+              </div>
+            </Link>
+
+            <Image
+              src="/images/logo2.png"
+              alt="VMS Logo"
+              width={140}
+              height={40}
+              className="mx-auto"
+            />
           </div>
-        </Link>
+        </header>
 
-        <Image src="/images/logo2.png" alt="VMS Logo" width={140} height={40} />
-      </header>
-
-      {/* Form Card */}
-      <div className="w-full max-w-[654px] bg-white rounded-2xl p-6 shadow">
+        {/* Form Card */}
+        <div className="w-full max-w-[654px] bg-white rounded-2xl p-6 shadow">
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
           {/* Visitor Search */}
           <div className="relative">
@@ -192,6 +203,7 @@ export default function SignOutPage() {
             Sign Out
           </Button>
         </form>
+        </div>
       </div>
     </div>
   );

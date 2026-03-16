@@ -134,18 +134,19 @@ export default function DashboardPage() {
     );
 
   return (
-    <div className="min-h-screen p-6 bg-[#F5F5FA] flex flex-col gap-8 relative">
-      <header className="flex justify-between items-center">
+    <div className="min-h-screen bg-[#F5F5FA] flex flex-col gap-8 relative px-4 py-6 sm:p-6">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <Image
           src="/images/logo2.png"
           alt="Logo"
           width={140}
           height={50}
           priority
+          className="w-[120px] sm:w-[140px] h-auto"
         />
         <button
           onClick={handleLogout}
-          className="flex items-center gap-2 px-4 py-2 border rounded-full bg-white shadow-sm"
+          className="flex items-center justify-center gap-2 px-4 py-2 border rounded-full bg-white shadow-sm w-full sm:w-auto"
         >
           <LogOut size={16} />
           <span>Logout</span>
@@ -170,12 +171,15 @@ export default function DashboardPage() {
         />
       </div>
 
-      <div className="bg-white rounded-[20px] p-6 shadow-sm border border-gray-100 min-h-[400px]">
-        <div className="flex justify-between items-center mb-6">
+      <div className="bg-white rounded-[20px] p-4 sm:p-6 shadow-sm border border-gray-100 min-h-[400px]">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
           <h2 className="text-lg font-bold">Visits Log</h2>
 
-          <div className="flex items-center gap-3 relative" ref={filterRef}>
-            <div className="relative">
+          <div
+            className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3 relative"
+            ref={filterRef}
+          >
+            <div className="relative w-full sm:w-auto">
               <Search
                 size={18}
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A1ACB2]"
@@ -185,13 +189,13 @@ export default function DashboardPage() {
                 placeholder="Search visitors..."
                 onChange={(e) => setSearchQuery(e.target.value)}
                 value={searchQuery}
-                className="pl-11 pr-4 py-2 border border-gray-200 rounded-full text-sm w-80 bg-[#F9FAFB]"
+                className="pl-11 pr-4 py-2 border border-gray-200 rounded-full text-sm w-full sm:w-80 bg-[#F9FAFB]"
               />
             </div>
 
             <button
               onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className={`p-2.5 border rounded-full transition-all ${
+              className={`p-2.5 border rounded-full transition-all self-start sm:self-auto ${
                 isFilterOpen
                   ? "bg-[#1D2E5A] text-white border-[#1D2E5A]"
                   : "bg-[#F9FAFB] text-[#A1ACB2] border-gray-200"
