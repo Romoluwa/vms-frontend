@@ -183,8 +183,8 @@ export default function DashboardPage() {
     );
 
   return (
-    <div className="min-h-screen bg-[#F5F5FA] flex flex-col gap-8 relative px-4 py-6 sm:p-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="min-h-screen bg-[#F5F5FA] flex flex-col gap-6 sm:gap-8 relative px-4 py-5 sm:p-6">
+      <header className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
         <Image
           src="/images/logo2.png"
           alt="Logo"
@@ -221,7 +221,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="bg-white rounded-[20px] p-4 sm:p-6 shadow-sm border border-gray-100 min-h-[400px]">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5 sm:mb-6">
           <h2 className="text-lg font-bold">Visits Log</h2>
 
           <div
@@ -242,7 +242,7 @@ export default function DashboardPage() {
               />
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
               <input
                 type="date"
                 value={fromDate}
@@ -250,7 +250,7 @@ export default function DashboardPage() {
                 className="px-3 py-2 border border-gray-200 rounded-full text-sm w-full sm:w-auto bg-[#F9FAFB]"
                 aria-label="From date"
               />
-              <span className="text-xs text-gray-400">to</span>
+              <span className="text-xs text-gray-400 hidden sm:inline">to</span>
               <input
                 type="date"
                 value={toDate}
@@ -261,38 +261,40 @@ export default function DashboardPage() {
               />
             </div>
 
-            <button
-              onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className={`p-2.5 border rounded-full transition-all self-start sm:self-auto ${
-                isFilterOpen
-                  ? "bg-[#1D2E5A] text-white border-[#1D2E5A]"
-                  : "bg-[#F9FAFB] text-[#A1ACB2] border-gray-200"
-              }`}
-            >
-              <Funnel size={18} />
-            </button>
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <button
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className={`p-2.5 border rounded-full transition-all ${
+                  isFilterOpen
+                    ? "bg-[#1D2E5A] text-white border-[#1D2E5A]"
+                    : "bg-[#F9FAFB] text-[#A1ACB2] border-gray-200"
+                }`}
+              >
+                <Funnel size={18} />
+              </button>
 
-            <button
-              onClick={handleExport}
-              disabled={isExporting}
-              className={`p-2.5 border rounded-full transition-all self-start sm:self-auto ${
-                isExporting
-                  ? "bg-[#1D2E5A] text-white border-[#1D2E5A] opacity-70"
-                  : "bg-[#F9FAFB] text-[#A1ACB2] border-gray-200 hover:text-[#1D2E5A]"
-              }`}
-              aria-label="Export CSV"
-            >
-              {isExporting ? (
-                <Loader2 size={18} className="animate-spin" />
-              ) : (
-                <Download size={18} />
-              )}
-            </button>
+              <button
+                onClick={handleExport}
+                disabled={isExporting}
+                className={`p-2.5 border rounded-full transition-all ${
+                  isExporting
+                    ? "bg-[#1D2E5A] text-white border-[#1D2E5A] opacity-70"
+                    : "bg-[#F9FAFB] text-[#A1ACB2] border-gray-200 hover:text-[#1D2E5A]"
+                }`}
+                aria-label="Export CSV"
+              >
+                {isExporting ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : (
+                  <Download size={18} />
+                )}
+              </button>
+            </div>
 
             {/* FILTER DROPDOWN */}
             {isFilterOpen && (
               <div
-                className="absolute top-12 right-0 w-56 bg-white border border-gray-200 rounded-xl shadow-2xl z-[9999] p-4"
+                className="absolute top-12 right-0 left-0 sm:left-auto w-full sm:w-56 bg-white border border-gray-200 rounded-xl shadow-2xl z-[9999] p-4"
                 style={{ filter: "drop-shadow(0 10px 15px rgba(0,0,0,0.1))" }}
               >
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
@@ -396,15 +398,17 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <DefaultTable
-          columns={VisitorColumns}
-          data={visitors}
-          loading={loading}
-          onRowClick={(v) => {
-            setSelectedVisitor(v);
-            setIsSheetOpen(true);
-          }}
-        />
+        <div className="-mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto">
+          <DefaultTable
+            columns={VisitorColumns}
+            data={visitors}
+            loading={loading}
+            onRowClick={(v) => {
+              setSelectedVisitor(v);
+              setIsSheetOpen(true);
+            }}
+          />
+        </div>
       </div>
 
       <VisitorDetailSheet
