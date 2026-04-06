@@ -19,6 +19,7 @@ type PhoneInputProps<T extends FieldValues> = {
   name: Path<T>;
   error?: FieldError;
   countryCodeName?: Path<T>;
+  compact?: boolean;
 };
 
 export const PhoneInput = <T extends FieldValues>({
@@ -26,6 +27,7 @@ export const PhoneInput = <T extends FieldValues>({
   name,
   error,
   countryCodeName,
+  compact = false,
 }: PhoneInputProps<T>) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -47,7 +49,7 @@ export const PhoneInput = <T extends FieldValues>({
   return (
     <div className="flex flex-col gap-1 w-full relative">
       <div
-        className={`flex items-center border rounded-[12px] bg-white h-[56px] transition-all 
+        className={`flex items-center border rounded-[12px] bg-white ${compact ? "h-[48px]" : "h-[56px]"} transition-all 
         ${error ? "border-red-500 bg-red-50" : "border-gray-100 focus-within:border-[#1D2E5A] shadow-sm"}`}
       >
         {/* COUNTRY PICKER */}
@@ -66,14 +68,16 @@ export const PhoneInput = <T extends FieldValues>({
                 <button
                   type="button"
                   onClick={() => setIsOpen(!isOpen)}
-                  className="flex items-center gap-2 bg-gray-50 border-r border-gray-100 px-3 h-full min-w-[105px] shrink-0 hover:bg-gray-100 transition-colors"
+                  className={`flex items-center gap-2 bg-gray-50 border-r border-gray-100 ${compact ? "px-2 min-w-[96px]" : "px-3 min-w-[105px]"} h-full shrink-0 hover:bg-gray-100 transition-colors`}
                 >
                   <CountryFlag
                     countryCode={currentCountry}
                     svg
                     style={{ width: "1.2em", height: "1.2em" }}
                   />
-                  <span className="text-[13px] font-bold text-[#374151]">
+                  <span
+                    className={`${compact ? "text-[12px]" : "text-[13px]"} font-bold text-[#374151]`}
+                  >
                     +{currentCallingCode}
                   </span>
                   <ChevronDown
@@ -83,7 +87,9 @@ export const PhoneInput = <T extends FieldValues>({
                 </button>
 
                 {isOpen && (
-                  <div className="absolute top-[60px] left-0 w-full md:w-[320px] bg-white border border-gray-200 rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden">
+                  <div
+                    className={`absolute ${compact ? "top-[52px]" : "top-[60px]"} left-0 w-full md:w-[320px] bg-white border border-gray-200 rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden`}
+                  >
                     <div className="p-3 border-b border-gray-100 sticky top-0 bg-white">
                       <div className="relative flex items-center">
                         <Search
@@ -148,7 +154,7 @@ export const PhoneInput = <T extends FieldValues>({
                   val = val.substring(1);
                 onChange(val.slice(0, 10));
               }}
-              className="w-full h-full px-4 outline-none bg-transparent text-sm text-[#1D2E5A] font-medium placeholder:text-gray-300"
+              className={`w-full h-full ${compact ? "px-3 text-xs md:text-sm" : "px-4 text-sm"} outline-none bg-transparent text-[#1D2E5A] font-medium placeholder:text-gray-300`}
             />
           )}
         />

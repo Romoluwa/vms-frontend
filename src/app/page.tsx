@@ -3,8 +3,7 @@ import Link from "next/link";
 
 export default function WelcomePage() {
   return (
-    // Changed overflow-hidden to overflow-y-auto and added py-10 for breathing room
-    <main className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-y-auto py-10">
+    <main className="relative h-[100dvh] w-full flex flex-col items-center justify-center overflow-hidden">
       {/* 1. Background video - kept as absolute */}
       <video
         className="absolute inset-0 w-full h-full object-cover z-0"
@@ -16,7 +15,7 @@ export default function WelcomePage() {
       />
 
       {/* Added z-10 to ensure content stays above video and adjusted gap */}
-      <div className="relative z-10 flex flex-col items-center w-full px-4 sm:px-6 md:px-12 gap-8 md:gap-20">
+      <div className="relative z-10 flex flex-col items-center w-full px-4 sm:px-6 md:px-12 gap-6 md:gap-16">
         {/* Logo */}
         <header className="flex items-center">
           <Image

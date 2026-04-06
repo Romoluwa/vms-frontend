@@ -108,7 +108,7 @@ export default function SignInPage() {
   }, []);
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col items-center py-6 px-4 md:py-10 gap-6 overflow-x-hidden">
+    <div className="relative h-[100dvh] w-full flex flex-col items-center justify-start px-4 pt-2 md:pt-3 pb-2 gap-1.5 overflow-hidden">
       <video
         className="fixed inset-0 w-full h-full object-cover -z-10"
         src="/backgrounds/Form-bg.mp4"
@@ -118,67 +118,72 @@ export default function SignInPage() {
         playsInline
       />
 
-      <header className="relative w-full flex items-center justify-center mb-8">
-        <Link href="/">
-          <div className="absolute left-0 md:left-4 bg-[#FFFFFF] text-[#7E878C] rounded-full px-5 py-2.5 flex items-center gap-2 cursor-pointer shadow-sm hover:bg-gray-50 transition-all active:scale-95">
-            <ArrowLeft />
-            <p>Back</p>
-          </div>
-        </Link>
-        <Image
-          src="/images/logo2.png"
-          alt="VMS Logo"
-          width={140}
-          height={40}
-          className="object-contain md:w-[160px]"
-        />
-      </header>
+      <Link href="/">
+        <div className="absolute left-4 top-3 md:left-6 md:top-4 bg-[#FFFFFF] text-[#7E878C] rounded-full px-3 py-1.5 flex items-center gap-2 cursor-pointer shadow-sm hover:bg-gray-50 transition-all active:scale-95">
+          <ArrowLeft />
+          <p>Back</p>
+        </div>
+      </Link>
 
-      <div className="relative w-full max-w-[654px] border border-[#F7FAFC] bg-[#FFFFFF] rounded-[20px] md:rounded-[24px] p-6 md:p-9 flex flex-col gap-6 md:gap-8 shadow-sm">
-        <p className="text-center italic text-gray-400 text-sm">
-          Welcome to Bluechip, Please fill out your details
-        </p>
+      <div className="w-full flex flex-col items-center gap-1.5 origin-center [@media(max-height:900px)]:scale-[0.9] [@media(max-height:820px)]:scale-[0.86] [@media(max-height:760px)]:scale-[0.82]">
+        <header className="relative w-full max-w-[600px] flex items-center justify-center">
+          <Image
+            src="/images/logo2.png"
+            alt="VMS Logo"
+            width={140}
+            height={40}
+            className="object-contain md:w-[160px]"
+          />
+        </header>
 
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          noValidate
-          className="flex flex-col gap-5 md:gap-6"
-        >
+        <div className="relative w-full max-w-[600px] border border-[#F7FAFC] bg-[#FFFFFF] rounded-[18px] md:rounded-[20px] p-3 md:p-4 flex flex-col gap-2.5 md:gap-3 shadow-sm">
+          <p className="text-center italic text-gray-400 text-[11px] md:text-xs">
+            Welcome to Bluechip, Please fill out your details
+          </p>
+
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            noValidate
+            className="flex flex-col gap-2.5 md:gap-3"
+          >
           <Input
             name="visitorName"
             placeholder="Visitor Name"
             register={register}
             error={errors.visitorName}
+            compact
           />
 
           <PhoneInput
             name="phoneNumber"
             control={control}
             error={errors.phoneNumber}
+            compact
           />
 
-          <p className="text-sm text-[#A1ACB2]">
+          <p className="text-[10px] md:text-xs text-[#A1ACB2]">
             Who are you here to see and why?
           </p>
 
-          <div className="flex flex-col md:flex-row gap-5 md:gap-6 w-full">
-            <div className="flex flex-col flex-1 gap-2">
-              <label className="text-[#7E878C] text-xs">Host/Personnel</label>
+            <div className="flex flex-col md:flex-row gap-2.5 md:gap-3 w-full">
+              <div className="flex flex-col flex-1 gap-2">
+              <label className="text-[#7E878C] text-[11px]">Host/Personnel</label>
               <Input
                 name="hostName"
                 placeholder="Host Name"
                 register={register}
                 error={errors.hostName}
+                compact
               />
             </div>
 
             <div className="flex flex-col flex-1 gap-2">
-              <label className="text-[#7E878C] text-xs">Department</label>
+              <label className="text-[#7E878C] text-[11px]">Department</label>
               <div className="relative">
                 <select
                   {...register("department")}
                   disabled={loadingDepts}
-                  className="w-full h-[52px] bg-white border border-[#E2E8F0] rounded-lg px-4 text-sm"
+                  className="w-full h-[44px] bg-white border border-[#E2E8F0] rounded-lg px-3 text-xs md:text-sm"
                 >
                   <option value="" disabled>
                     {loadingDepts ? "Loading..." : "Select Department"}
@@ -206,18 +211,19 @@ export default function SignInPage() {
             placeholder="Purpose of Visit"
             register={register}
             error={errors.purposeOfVisit}
+            compact
           />
 
           {/* LAPTOP SELECTION SECTION */}
-          <div className="flex flex-col gap-4 border-t border-gray-50 pt-4">
-            <div className="flex items-center gap-3 text-[#7E878C]">
-              <Laptop size={18} />
-              <span className="text-sm font-medium">
+            <div className="flex flex-col gap-2 border-t border-gray-50 pt-2">
+              <div className="flex items-center gap-3 text-[#7E878C]">
+                <Laptop size={18} />
+              <span className="text-[11px] md:text-xs font-medium">
                 Did you come with a laptop?
               </span>
             </div>
 
-            <div className="flex gap-8 px-1">
+            <div className="flex gap-4 px-1">
               {/* YES CHECKBOX */}
               <button
                 type="button"
@@ -236,7 +242,7 @@ export default function SignInPage() {
                   )}
                 </div>
                 <span
-                  className={`text-sm ${hasLaptop === true ? "text-[#1D2E5A] font-bold" : "text-[#7E878C]"}`}
+                  className={`text-xs ${hasLaptop === true ? "text-[#1D2E5A] font-bold" : "text-[#7E878C]"}`}
                 >
                   Yes
                 </span>
@@ -260,7 +266,7 @@ export default function SignInPage() {
                   )}
                 </div>
                 <span
-                  className={`text-sm ${hasLaptop === false ? "text-[#1D2E5A] font-bold" : "text-[#7E878C]"}`}
+                  className={`text-xs ${hasLaptop === false ? "text-[#1D2E5A] font-bold" : "text-[#7E878C]"}`}
                 >
                   No
                 </span>
@@ -276,13 +282,14 @@ export default function SignInPage() {
               }`}
             >
               <div className="overflow-hidden">
-                <div className="flex flex-col md:flex-row gap-5 md:gap-6 pt-2 pb-2">
+                <div className="flex flex-col md:flex-row gap-3 md:gap-4 pt-1 pb-1">
                   <div className="flex-1">
                     <Input
                       name="laptopModel"
                       placeholder="Laptop Model"
                       register={register}
                       error={errors.laptopModel}
+                      compact
                     />
                   </div>
                   <div className="flex-1">
@@ -291,6 +298,7 @@ export default function SignInPage() {
                       placeholder="Serial Number"
                       register={register}
                       error={errors.laptopSerialNumber}
+                      compact
                     />
                   </div>
                 </div>
@@ -299,7 +307,7 @@ export default function SignInPage() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-[#A1ACB2] text-sm italic">
+            <label className="text-[#A1ACB2] text-xs italic">
               Confirm your Signature
             </label>
             <Controller
@@ -310,18 +318,20 @@ export default function SignInPage() {
                   onChange={onChange}
                   // Using error from fieldState is more idiomatic in React Hook Form
                   error={error || errors.signature}
+                  compact
                 />
               )}
             />
           </div>
 
-          <Button type="submit" isLoading={showLoading}>
+          <Button type="submit" isLoading={showLoading} compact>
             <span className="mr-2">
               <UserRoundCheck />
             </span>
             Sign In
           </Button>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );

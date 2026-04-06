@@ -14,9 +14,7 @@ const API = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// ----------------------------------------------------
-// REQUEST INTERCEPTOR
-// ----------------------------------------------------
+
 
 API.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
@@ -259,6 +257,27 @@ export default class VisitService {
       return response.data;
     } catch (error) {
       console.error("Failed to fetch visit details:", error);
+      throw error;
+    }
+  }
+
+  // --- EXPORT ---
+  static async exportVisits(params?: {
+    search?: string;
+    status?: "SIGNED_IN" | "SIGNED_OUT";
+    from?: string;
+    to?: string;
+    sortBy?: string;
+    sortDir?: "asc" | "desc";
+  }) {
+    try {
+      const response = await API.get(`/admin/export`, {
+        params,
+        responseType: "blob",
+      });
+      return response.data as Blob;
+    } catch (error) {
+      console.error("Export visits failed:", error);
       throw error;
     }
   }

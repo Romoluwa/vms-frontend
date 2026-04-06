@@ -12,6 +12,7 @@ type InputProps<T extends FieldValues> =
     name: Path<T>;
     error?: FieldError;
     shouldCapitalize?: boolean;
+    compact?: boolean;
   };
 
 const capitalizeWords = (value: string) => {
@@ -23,7 +24,9 @@ export const Input = <T extends FieldValues>({
   name,
   error,
   shouldCapitalize = true,
+  compact = false,
   onChange,
+  className,
   ...props
 }: InputProps<T>) => {
   const registerProps = register(name);
@@ -43,12 +46,12 @@ export const Input = <T extends FieldValues>({
         {...props}
         {...registerProps}
         onChange={handleChange}
-        className={`p-4 border rounded-[12px] outline-none transition-all text-sm text-black caret-black placeholder:text-[#A1ACB2]
+        className={`${compact ? "p-3 text-xs md:text-sm" : "p-4 text-sm"} border rounded-[12px] outline-none transition-all text-black caret-black placeholder:text-[#A1ACB2]
         ${
           error
             ? "border-red-500 bg-red-50"
             : "border-gray-100 focus:border-[#2B4592]"
-        } ${shouldCapitalize ? "capitalize" : ""}`}
+        } ${shouldCapitalize ? "capitalize" : ""} ${className ?? ""}`}
       />
 
       {error && (

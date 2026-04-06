@@ -6,9 +6,14 @@ import { FieldError } from "react-hook-form";
 interface SignatureProps {
   onChange: (signatureData: string | null) => void;
   error?: FieldError;
+  compact?: boolean;
 }
 
-export const SignaturePad = ({ onChange, error }: SignatureProps) => {
+export const SignaturePad = ({
+  onChange,
+  error,
+  compact = false,
+}: SignatureProps) => {
   const sigCanvas = useRef<SignatureCanvas>(null);
 
   const clear = () => {
@@ -40,7 +45,7 @@ export const SignaturePad = ({ onChange, error }: SignatureProps) => {
 
   return (
     <div className="flex flex-col gap-2 w-full">
-      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider italic">
+      <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wider italic">
         Visitor Signature
       </label>
       <div
@@ -53,14 +58,14 @@ export const SignaturePad = ({ onChange, error }: SignatureProps) => {
           penColor="#1D2E5A"
           velocityFilterWeight={0.7}
           canvasProps={{
-            className: "w-full h-40 cursor-crosshair",
+            className: `w-full ${compact ? "h-20 md:h-24" : "h-24 md:h-32"} cursor-crosshair`,
           }}
         />
 
         <button
           type="button"
           onClick={clear}
-          className="absolute top-2 right-2 text-[10px] font-bold bg-slate-100 text-slate-500 px-3 py-1.5 rounded-md hover:bg-red-50 hover:text-red-500 transition-all border border-transparent hover:border-red-100"
+          className="absolute top-2 right-2 text-[9px] font-bold bg-slate-100 text-slate-500 px-2.5 py-1 rounded-md hover:bg-red-50 hover:text-red-500 transition-all border border-transparent hover:border-red-100"
         >
           CLEAR
         </button>

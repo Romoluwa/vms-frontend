@@ -110,23 +110,22 @@ export default function SignOutPage() {
       />
 
       <div className="relative z-10 flex w-full flex-col items-center gap-6">
-        {/* Header */}
-        <header className="w-full max-w-[654px]">
-          <div className="flex items-center w-full">
-            <Link href="/">
-              <div className="bg-white rounded-full px-4 py-2 flex gap-2">
-                <ArrowLeft /> Back
-              </div>
-            </Link>
-
-            <Image
-              src="/images/logo2.png"
-              alt="VMS Logo"
-              width={140}
-              height={40}
-              className="mx-auto"
-            />
+        <Link href="/">
+          <div className="absolute left-4 top-3 md:left-6 md:top-4 bg-[#FFFFFF] text-[#7E878C] rounded-full px-3 py-1.5 flex items-center gap-2 cursor-pointer shadow-sm hover:bg-gray-50 transition-all active:scale-95">
+            <ArrowLeft />
+            <p>Back</p>
           </div>
+        </Link>
+
+        {/* Header */}
+        <header className="w-full max-w-[654px] flex items-center justify-center">
+          <Image
+            src="/images/logo2.png"
+            alt="VMS Logo"
+            width={140}
+            height={40}
+            className="object-contain md:w-[160px]"
+          />
         </header>
 
         {/* Form Card */}

@@ -3,13 +3,14 @@
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Search, LogOut, Loader2, Funnel } from "lucide-react";
+import { Search, LogOut, Loader2, Funnel, Download } from "lucide-react";
 import DataCard from "@/components/atoms/DataCard";
 import DefaultTable from "@/components/reusables/DefaultTable";
 import { useVisitorData, Visitor } from "@/hooks/useVisitorData";
 import { VisitorColumns } from "../../../../../constants/tables/visitorColumns";
 import { VisitorDetailSheet } from "@/components/reusables/VisitorDetailSheet";
 import WelcomeCard from "@/components/atoms/welcomeCard";
+import VisitService from "@/services/apidefinitions/visitService";
 
 const ADMIN_TOKEN_KEY = "adminAccessToken";
 
@@ -20,6 +21,7 @@ export default function DashboardPage() {
   const [selectedVisitor, setSelectedVisitor] = useState<Visitor | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Filter States
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -31,28 +33,22 @@ export default function DashboardPage() {
     Array<"asc" | "desc">
   >([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const filterRef = useRef<HTMLDivElement>(null);
 
   const { visitors, metrics, loading, filterVisitors } = useVisitorData();
 
   const toggleStatus = (status: string) => {
-    setStatusFilter((prev) =>
-      prev.includes(status)
-        ? prev.filter((s) => s !== status)
-        : [...prev, status],
-    );
+    setStatusFilter((prev) => (prev[0] === status ? [] : [status]));
   };
 
   const toggleEntryTimeSort = (order: "asc" | "desc") => {
-    setEntryTimeSortOrder((prev) =>
-      prev.includes(order) ? prev.filter((o) => o !== order) : [...prev, order],
-    );
+    setEntryTimeSortOrder((prev) => (prev[0] === order ? [] : [order]));
   };
 
   const toggleExitTimeSort = (order: "asc" | "desc") => {
-    setExitTimeSortOrder((prev) =>
-      prev.includes(order) ? prev.filter((o) => o !== order) : [...prev, order],
-    );
+    setExitTimeSortOrder((prev) => (prev[0] === order ? [] : [order]));
   };
 
   // Close filter when clicking outside
@@ -102,6 +98,8 @@ export default function DashboardPage() {
       filterVisitors({
         search: searchQuery.trim() || undefined,
         status: statusParam,
+        from: fromDate || undefined,
+        to: toDate || undefined,
         sortBy,
         sortDir,
         pageNo: 0,
@@ -115,8 +113,59 @@ export default function DashboardPage() {
     statusFilter,
     entryTimeSortOrder,
     exitTimeSortOrder,
+    fromDate,
+    toDate,
     filterVisitors,
   ]);
+
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+
+      const statusParam =
+        statusFilter.length === 1
+          ? statusFilter[0] === "Signed In"
+            ? "SIGNED_IN"
+            : "SIGNED_OUT"
+          : undefined;
+
+      const entrySortDir =
+        entryTimeSortOrder.length === 1 ? entryTimeSortOrder[0] : undefined;
+      const exitSortDir =
+        exitTimeSortOrder.length === 1 ? exitTimeSortOrder[0] : undefined;
+
+      const sortBy = exitSortDir
+        ? "signOutTime"
+        : entrySortDir
+          ? "signInTime"
+          : undefined;
+      const sortDir = exitSortDir || entrySortDir;
+
+      const blob = await VisitService.exportVisits({
+        search: searchQuery.trim() || undefined,
+        status: statusParam,
+        from: fromDate || undefined,
+        to: toDate || undefined,
+        sortBy,
+        sortDir,
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const dateStamp = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `visits-export-${dateStamp}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export failed:", error);
+      alert("Export failed. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -193,6 +242,25 @@ export default function DashboardPage() {
               />
             </div>
 
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="px-3 py-2 border border-gray-200 rounded-full text-sm w-full sm:w-auto bg-[#F9FAFB]"
+                aria-label="From date"
+              />
+              <span className="text-xs text-gray-400">to</span>
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                min={fromDate || undefined}
+                className="px-3 py-2 border border-gray-200 rounded-full text-sm w-full sm:w-auto bg-[#F9FAFB]"
+                aria-label="To date"
+              />
+            </div>
+
             <button
               onClick={() => setIsFilterOpen(!isFilterOpen)}
               className={`p-2.5 border rounded-full transition-all self-start sm:self-auto ${
@@ -202,6 +270,23 @@ export default function DashboardPage() {
               }`}
             >
               <Funnel size={18} />
+            </button>
+
+            <button
+              onClick={handleExport}
+              disabled={isExporting}
+              className={`p-2.5 border rounded-full transition-all self-start sm:self-auto ${
+                isExporting
+                  ? "bg-[#1D2E5A] text-white border-[#1D2E5A] opacity-70"
+                  : "bg-[#F9FAFB] text-[#A1ACB2] border-gray-200 hover:text-[#1D2E5A]"
+              }`}
+              aria-label="Export CSV"
+            >
+              {isExporting ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <Download size={18} />
+              )}
             </button>
 
             {/* FILTER DROPDOWN */}
